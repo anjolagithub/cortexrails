@@ -1,18 +1,28 @@
 # Demo Walkthrough
 
-A judge-facing walkthrough of six core flows, run against the live
-V2 deployment on Robinhood Chain testnet (`docs/DEPLOYMENTS.md`)
-through the frontend's Policy Console (`/app`), its agent-intent demo
-section, and Activity log (`/app/activity`).
+A judge-facing walkthrough of seven core flows, run against the
+frontend's Policy Console (`/app`), its agent-intent demo section, and
+Activity log (`/app/activity`). **Current live deployment is V4**
+(`docs/DEPLOYMENTS.md`) — contract addresses below are updated to
+match it.
 
 > **Status of the hashes below:** Deposit, ALLOW borrow, and Vault
 > withdrawal each have a real transaction hash from actually
 > performing that action through the live frontend with a real
-> wallet — none are fabricated. The LIMIT borrow step and the Transfer
-> debt-safety step have **no hash at all, by design**, not because
-> they're still pending: see each section for why. No successful
-> (non-blocked) Transfer hash exists yet either — stated plainly below
-> rather than filled with a placeholder.
+> wallet — none are fabricated. **They were recorded against the V2
+> instances of these contracts, before the V3/V4 redeploys.** They
+> remain real, honest proof that these exact flows worked live; they
+> are not hashes against the current V4 addresses, because
+> `LendingAdapter`/`VaultAdapter`/`TransferAdapter` were redeployed
+> twice since (to add `repay()`/LIQUIDATE, then the `liquidate()`
+> function) and a fresh position has not yet been rebuilt from scratch
+> against V4 through the live UI. Recording the demo video against the
+> current V4 deployment replaces this note with real V4 hashes. The
+> LIMIT borrow step and the Transfer debt-safety step have **no hash
+> at all, by design**, not because they're still pending: see each
+> section for why. No successful (non-blocked) Transfer hash exists
+> yet either — stated plainly below rather than filled with a
+> placeholder.
 
 Every hash links to Robinhood Chain testnet's explorer:
 `https://explorer.testnet.chain.robinhood.com/tx/<hash>`.
@@ -23,10 +33,12 @@ Every hash links to Robinhood Chain testnet's explorer:
   a small ETH balance for gas.
 - A real TSLA balance (the live collateral token,
   `0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E`).
-- The `LedgerLineLendingAdapter`
-  (`0x39E0d1F2877c69F1a617a86d4Bd4F8B3f2493C97`) needs to already hold
-  real USDG liquidity to pay out borrows — funded once from the Paxos
-  testnet faucet per `docs/INTEGRATIONS.md`.
+- The current `LedgerLineLendingAdapter`
+  (`0x5e559ADeb6B69E7c6f26c0aE51071a162Aa6560d`, V4) needs to already
+  hold real USDG liquidity to pay out borrows — funded once from the
+  Paxos testnet faucet per `docs/INTEGRATIONS.md` (12 USDG as of the
+  V4 funding tx in `docs/DEPLOYMENTS.md`, enough for one full
+  borrow/repay/liquidate demo cycle, not a large pool).
 
 ## 1. TSLA deposit
 
@@ -81,24 +93,23 @@ lifecycle state (`ACTIVE`), not borrowing capacity, per
 wallet and update the shared Registry position. The `Withdrawn` event
 appears in the Activity log.
 
-The live VaultAdapter is the debt-safe instance
-(`0xfF7EC5218730AdbCAa14cdf205cc57F97D335A6b`). It also reverts with
+The live VaultAdapter is the debt-safe, V4 instance
+(`0x4E94e5AdB0b03Be4E9d7336Da7f847E4E4BA9C43`). It also reverts with
 `WouldUnderCollateralizeDebt` if the withdrawal would leave outstanding
 USDG debt uncovered by the remaining position's capacity. Its deploy
 and authorization txs are in `docs/DEPLOYMENTS.md`.
 
-The hash below is a real `withdraw(1 TSLA)` through that instance
-(`ALLOW`, block 123634239). Its receipt shows the tx sent to
-`0xfF7E…5A6b`, which emitted `Withdrawn`, and `LendingAdapter` emitting
-`Released` for the TSLA transfer.
+The hash below is a real `withdraw(1 TSLA)` through the pre-V4
+debt-safe instance (`ALLOW`, block 123634239) — see the status note at
+the top of this document regarding V2 vs. V4 hashes.
 
 - Explorer: `https://explorer.testnet.chain.robinhood.com/tx/0xf7483471e5b898c7ad71b41f328b12d521c36c3d710189257c49e8aa9c7301db`
 
 ## 5. Transfer blocked by outstanding debt
 
 With an outstanding USDG debt on the position (from step 2), attempt
-a `TransferAdapter.transfer(to, amount)`
-(`0xc5Af6A4a36b6e1b2B22D03b18bBA9FEA6D456943`) for any amount. Per
+a `TransferAdapter.transfer(to, amount)` (V4 instance:
+`0x32D47195108fE08aA518D9779689F83E2154D4f1`) for any amount. Per
 `docs/POLICY.md`/`docs/SECURITY.md`, `Action.TRANSFER` is
 lifecycle-gated only through `canExecute` — same as WITHDRAW — but
 `TransferAdapter` itself independently checks
@@ -184,6 +195,57 @@ hasn't drifted from the real contract, not a routine gate.
 - Explorer: n/a for the evaluation reads (they are `eth_call`s, not
   transactions); the execution step's hash, once performed, is the same
   kind of `Borrowed` event already covered in step 2 and the Activity log.
+
+## 7. LIQUIDATE (permissionless, via LedgerLineLiquidationAdapter)
+
+On the Policy Console, the Liquidate panel (below the Borrow/Withdraw/
+Transfer grid) takes a borrower address, then reads that borrower's
+real debt from `LedgerLineLendingAdapter.debt()` and their real
+position from `Registry`, and calls
+`LedgerLinePolicy.canExecute(assetId, positionId, Action.LIQUIDATE,
+debt)` -- the exact same read `LedgerLineLiquidationAdapter`
+(`0xB24Af6a1bAfAB462DAa4776C0bc884Ce70B3a97d`) performs onchain before
+acting. Unlike BORROW, this decision is strictly binary: `ALLOW` or
+`BLOCK`, never `LIMIT` -- `LedgerLinePolicy`'s LIQUIDATE branch has no
+partial-permission case (`docs/POLICY.md`).
+
+Flow demonstrated:
+
+1. Enter a borrower address with an active position and outstanding
+   debt. The panel shows debt, position value, and the maintenance
+   threshold (`positionValue x collateralFactorBps`), and the live
+   `ALLOW`/`BLOCK` verdict -- `BLOCK` if debt is at or below threshold,
+   `ALLOW` only if debt is strictly above it.
+2. On `ALLOW`, enter a repay amount (in USDG) and a seize amount (in
+   TSLA). The UI validates neither exceeds the real debt or position
+   size before enabling submission.
+3. **Approve USDG** -- a `safeTransferFrom`-enabling approval from the
+   liquidator's wallet to `LendingAdapter`, sized to the exact
+   6-decimal USDG amount the repay will pull (rounded up the same way
+   the contract does, `toTokenAmountRoundUp` in
+   `frontend/lib/contracts.ts`).
+4. **Liquidate** -- calls `LedgerLineLiquidationAdapter.liquidate(
+   borrower, repayAmount, seizeAmount)`. Onchain, this re-derives the
+   borrower's live debt itself (never trusts a caller-supplied figure),
+   re-checks `canExecute()`, and on `ALLOW` calls
+   `LendingAdapter.liquidate()`, which reduces the borrower's debt,
+   reduces their Registry position, pulls USDG from the liquidator, and
+   pays out TSLA to the liquidator. The `Liquidated` event appears in
+   the Activity log with both the borrower and liquidator addresses.
+
+This is genuinely permissionless -- any wallet can be the liquidator,
+not just the position owner or an authorized operator, matching
+`test_anyoneCanLiquidate_permissionless` in
+`contracts/test/LedgerLineLiquidationAdapter.t.sol`.
+
+**No hash recorded here yet** -- same standard as the rest of this
+document: only hashes from actions actually performed once, live,
+through the real frontend get recorded, never a fabricated one.
+Recording the demo video is the moment to fill this in with a real
+liquidation tx.
+
+- Explorer: n/a -- no liquidation has been performed through the live
+  frontend as of this writing.
 
 ## Verifying independently
 
