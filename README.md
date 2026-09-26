@@ -1,12 +1,15 @@
 # CortexRails Protocol
 
-## The policy layer between intent and financial execution.
+## Liquidations shouldn't be a guess.
 
-CortexRails is an onchain policy primitive for tokenized-asset finance.
-Financial protocols and autonomous agents call CortexRails before
-executing an action, and receive a deterministic **ALLOW**, **LIMIT**,
-**REVIEW**, or **BLOCK** decision based on asset state, position risk,
-lifecycle conditions, and action-specific rules.
+When a lending protocol can't prove that seizing collateral is
+actually safe, it either freezes trading or gets drained by bad debt.
+CortexRails is the deterministic onchain policy layer that answers
+that question the same way, every time: financial protocols and
+autonomous agents call CortexRails before executing an action, and
+receive a deterministic **ALLOW**, **LIMIT**, **REVIEW**, or **BLOCK**
+decision based on asset state, position risk, lifecycle conditions,
+and action-specific rules.
 
 **Agents propose. CortexRails decides. Adapters execute.**
 

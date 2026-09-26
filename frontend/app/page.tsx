@@ -166,8 +166,8 @@ export default function Landing() {
       <section id="product" className="hero-grid relative grid scroll-mt-24 items-center gap-12 border-b border-terminal-border py-12 md:grid-cols-[1.15fr_.85fr] md:py-20">
         <div className="flex flex-col gap-7">
           <div className="flex items-center gap-3"><span className="eyebrow">CortexRails Protocol</span><span className="h-px w-10 bg-terminal-accent" /></div>
-          <h1 className="max-w-3xl text-[2.7rem] font-semibold leading-[.98] tracking-[-.055em] sm:text-6xl lg:text-[4.6rem]">The policy layer between intent and <span className="text-terminal-accent">financial execution.</span></h1>
-          <p className="max-w-xl text-lg leading-8 text-terminal-muted">CortexRails gives financial protocols and autonomous agents a deterministic onchain policy layer for evaluating asset state, position risk, lifecycle conditions, and action-specific rules before value moves.</p>
+          <h1 className="max-w-3xl text-[2.7rem] font-semibold leading-[.98] tracking-[-.055em] sm:text-6xl lg:text-[4.6rem]">Liquidations shouldn&apos;t be <span className="text-terminal-accent">a guess.</span></h1>
+          <p className="max-w-xl text-lg leading-8 text-terminal-muted">CortexRails is the deterministic policy layer that decides whether a borrow, withdrawal, transfer, or liquidation is actually safe -- before it executes. Live on Robinhood Chain against real TSLA stock tokens and real USDG, with every liquidation threshold checked against 14 years of real price history, not assumptions.</p>
           <div className="flex flex-wrap gap-3">
             <Link href="/app" className="primary-action px-5 py-3.5 text-xs font-bold uppercase tracking-[.12em] text-terminal-accent-fg transition-transform hover:-translate-y-0.5">Explore the policy engine <span aria-hidden="true" className="ml-1">→</span></Link>
             <a href={REPO} target="_blank" rel="noreferrer" className="secondary-action px-5 py-3.5 text-xs font-bold uppercase tracking-[.12em] transition-colors hover:bg-terminal-surface">View on GitHub</a>
