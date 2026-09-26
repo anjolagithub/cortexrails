@@ -1,67 +1,93 @@
 #!/usr/bin/env python3
-"""Render the CortexRails architecture flow as a submission image (1280x720)."""
+"""Render the CortexRails architecture flow as a submission image (1280x720),
+matching the actual brand palette/typography (frontend/app/globals.css)."""
 from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
-from matplotlib.path import Path as MplPath
 
 OUT = Path(__file__).parent / "cortexrails_architecture.png"
 
+FONT_DIR = Path("/tmp/claude-0/fonts/jbm/fonts/ttf")
+for f in ["JetBrainsMono-Regular.ttf", "JetBrainsMono-Bold.ttf", "JetBrainsMono-SemiBold.ttf"]:
+    fm.fontManager.addfont(str(FONT_DIR / f))
+plt.rcParams["font.family"] = "JetBrains Mono"
+
+# Real brand palette (frontend/app/globals.css @theme)
+BG = "#07111f"
+SURFACE = "#0d1b2e"
+SURFACE2 = "#11243b"
+BORDER = "#20334b"
+TEXT = "#eef5ff"
+MUTED = "#91a5bd"
+ACCENT = "#ff7058"
+ALLOW = "#52e0a2"
+LIMIT = "#ffd166"
+BLOCK = "#ff766d"
+REVIEW = "#b9a7ff"
+
 fig, ax = plt.subplots(figsize=(12.8, 7.2), dpi=100)
-fig.patch.set_facecolor("#0b0e14")
-ax.set_facecolor("#0b0e14")
+fig.patch.set_facecolor(BG)
+ax.set_facecolor(BG)
 ax.set_xlim(0, 12.8)
 ax.set_ylim(0, 7.2)
 ax.axis("off")
 
-ax.text(6.4, 6.55, "CortexRails Protocol — architecture", color="white",
-        fontsize=22, fontweight="bold", ha="center")
-ax.text(6.4, 6.05, "Policy separated from execution: every action is decided before it runs",
-        color="#8b92a3", fontsize=13, ha="center")
+# header, matching the site's eyebrow + heading pattern
+ax.text(0.55, 6.75, "C O R T E X R A I L S   —   S Y S T E M   A R C H I T E C T U R E",
+        color=ACCENT, fontsize=11.5, fontweight="bold")
+ax.text(0.55, 6.32, "Policy separated from execution", color=TEXT,
+        fontsize=20, fontweight="bold")
+ax.plot([0.55, 12.25], [5.98, 5.98], color=BORDER, linewidth=1)
 
 boxes = [
-    ("Agent / Protocol", "Submits a structured\nfinancial intent", "#1c2230", "#5ce1ff"),
-    ("CortexRails Policy", "Evaluates asset, position,\nrisk & lifecycle rules", "#2a1c1c", "#f5c518"),
-    ("Decision", "ALLOW · LIMIT ·\nREVIEW · BLOCK", "#1c2a20", "#4ade80"),
-    ("Financial Adapter", "Lending · Vault ·\nTransfer · Liquidation", "#241c2a", "#c084fc"),
-    ("Onchain Execution", "Robinhood Chain testnet\n(Stylus + Solidity)", "#1c2230", "#5ce1ff"),
+    ("AGENT / PROTOCOL", "Submits a structured\nfinancial intent", SURFACE2, "#5ce1ff"),
+    ("CORTEXRAILS POLICY", "Evaluates asset, position,\nrisk & lifecycle rules", SURFACE2, ACCENT),
+    ("DECISION", "ALLOW · LIMIT ·\nREVIEW · BLOCK", SURFACE2, ALLOW),
+    ("FINANCIAL ADAPTER", "Lending · Vault ·\nTransfer · Liquidation", SURFACE2, REVIEW),
+    ("ONCHAIN EXECUTION", "Robinhood Chain testnet\n(Stylus + Solidity)", SURFACE2, "#5ce1ff"),
 ]
 
 n = len(boxes)
-box_w, box_h = 2.05, 1.7
+box_w, box_h = 2.08, 1.85
 gap = (12.8 - n * box_w) / (n + 1)
-y_center = 3.55
+y_center = 3.85
 
 centers = []
 for i, (title, subtitle, fill, edge) in enumerate(boxes):
     x = gap + i * (box_w + gap)
     centers.append((x + box_w / 2, y_center))
     box = FancyBboxPatch((x, y_center - box_h / 2), box_w, box_h,
-                          boxstyle="round,pad=0.02,rounding_size=0.12",
-                          linewidth=2.2, edgecolor=edge, facecolor=fill)
+                          boxstyle="round,pad=0.02,rounding_size=0.1",
+                          linewidth=1.6, edgecolor=BORDER, facecolor=fill)
     ax.add_patch(box)
-    ax.text(x + box_w / 2, y_center + 0.32, title, color="white",
-            fontsize=13.5, fontweight="bold", ha="center", va="center")
-    ax.text(x + box_w / 2, y_center - 0.28, subtitle, color="#c7cbd6",
-            fontsize=10.3, ha="center", va="center", linespacing=1.6)
+    # accent top rule inside each box (mirrors .feature-section::before on the site)
+    ax.plot([x + 0.18, x + 0.7], [y_center + box_h / 2 - 0.22] * 2, color=edge, linewidth=2.4)
+    ax.text(x + box_w / 2, y_center + 0.28, title, color=TEXT,
+            fontsize=11.8, fontweight="bold", ha="center", va="center")
+    ax.text(x + box_w / 2, y_center - 0.32, subtitle, color=MUTED,
+            fontsize=9.6, ha="center", va="center", linespacing=1.7)
 
 for i in range(n - 1):
     x0 = centers[i][0] + box_w / 2
     x1 = centers[i + 1][0] - box_w / 2
-    arrow = FancyArrowPatch((x0, y_center), (x1, y_center),
-                             arrowstyle="-|>", mutation_scale=22,
-                             linewidth=2.2, color="#e6e8ee")
+    arrow = FancyArrowPatch((x0 + 0.04, y_center), (x1 - 0.04, y_center),
+                             arrowstyle="-|>", mutation_scale=16,
+                             linewidth=1.8, color=MUTED)
     ax.add_patch(arrow)
 
-ax.text(6.4, 1.35,
-        "If an action exceeds its permitted amount, CortexRails returns the permitted amount instead of\nsilently changing the request — the caller adjusts and resubmits the intent before execution.",
-        color="#8b92a3", fontsize=12, ha="center", linespacing=1.8)
+ax.plot([0.55, 12.25], [1.55, 1.55], color=BORDER, linewidth=1)
 
-ax.text(6.4, 0.55,
-        "Agents propose.  CortexRails decides.  Adapters execute.",
-        color="#f5c518", fontsize=14, fontweight="bold", ha="center")
+ax.text(0.55, 1.15,
+        "If an action exceeds its permitted amount, CortexRails returns the permitted amount instead\n"
+        "of silently changing the request — the caller adjusts and resubmits before execution.",
+        color=MUTED, fontsize=10.8, linespacing=1.9)
+
+ax.text(0.55, 0.42, "AGENTS PROPOSE.", color=ALLOW, fontsize=13, fontweight="bold")
+ax.text(3.15, 0.42, "CORTEXRAILS DECIDES.", color=ACCENT, fontsize=13, fontweight="bold")
+ax.text(7.05, 0.42, "ADAPTERS EXECUTE.", color=REVIEW, fontsize=13, fontweight="bold")
 
 plt.tight_layout()
 plt.savefig(OUT, facecolor=fig.get_facecolor())
