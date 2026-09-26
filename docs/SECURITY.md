@@ -39,6 +39,18 @@ exists specifically as the intended eventual replacement for
 owner-set prices, but it is not wired into Registry today, and (see
 below) is not currently even callable as deployed.
 
+**This is a testnet infrastructure limit, not a scope decision we
+made.** Chainlink's own launch announcement states its Data Feeds,
+Data Streams, and CCIP integration on Robinhood Chain went live "on
+mainnet... from day one," with no testnet variant offered; Chainlink's
+and Robinhood's own docs list tokenized-equity price feed addresses
+under "Robinhood Chain Mainnet" only. There is no live TSLA oracle
+feed available on Robinhood Chain testnet to integrate against today,
+for anyone. `RobinhoodStockTokenAdapter` is the wiring point we've
+already built for the day a testnet (or mainnet) feed exists — the gap
+is upstream infrastructure availability, not unfinished work on our
+side.
+
 ## Lifecycle enforcement
 
 Transitions are validated against a fixed, hardcoded graph
