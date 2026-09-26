@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 import { LandingPolicyDemo } from "@/components/LandingPolicyDemo";
 
-const REPO = "https://github.com/anjolagithub/ledgerline-cor";
+const REPO = "https://github.com/anjolagithub/cortexrails";
 const EXPLORER = "https://explorer.testnet.chain.robinhood.com";
 
 // Exact signature from contracts/src/interfaces/ILedgerLinePolicy.sol and

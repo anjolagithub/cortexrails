@@ -14,11 +14,11 @@ Deployed on Robinhood Chain testnet against the real TSLA Stock Token
 and USDG. Built for the Arbitrum Open House Singapore online
 buildathon.
 
-> **Note for judges:** this repo is named `ledgerline-cor` and the
-> Solidity contracts, tests, and SDK keep their original `LedgerLine`
-> technical names -- that's the same project as **CortexRails
-> Protocol**, just under its pre-rebrand engineering name. See
-> [Naming](#naming) for why nothing onchain was renamed.
+> **Note for judges:** this repo is `github.com/anjolagithub/cortexrails`.
+> The Solidity contracts, tests, and SDK keep their original
+> `LedgerLine` technical names -- that's the same project as
+> **CortexRails Protocol**, just under its pre-rebrand engineering
+> name. See [Naming](#naming) for why nothing onchain was renamed.
 
 ## Why CortexRails
 
@@ -374,12 +374,12 @@ Natural next additions, given the current, disclosed scope boundaries:
 
 ## Naming
 
-The public product name is **CortexRails Protocol**. This repo
-(`ledgerline-cor`), the Solidity contracts, tests, deployment scripts,
-and the `@ledgerline/core` SDK package all keep the original
-`LedgerLine` technical name, because renaming a deployed or importable
-identifier -- or a repo other tooling already points at -- for
-branding alone would break real compatibility for no benefit. If
+The public product name is **CortexRails Protocol**, and this repo is
+now named to match (`cortexrails`, previously `ledgerline-cor`). The
+Solidity contracts, tests, deployment scripts, and the
+`@ledgerline/core` SDK package still keep their original `LedgerLine`
+technical name, because renaming a deployed or importable identifier
+for branding alone would break real compatibility for no benefit. If
 you're looking for the CortexRails Protocol submission and landed on
 `LedgerLine` code, contracts, or addresses: **this is it, same
 project.** Neither name is an established or trademarked product name.
