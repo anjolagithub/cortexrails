@@ -167,7 +167,7 @@ operator-configured in the test environment.
 
 | | |
 |---|---|
-| **Real / deployed** | Robinhood Chain testnet · real TSLA Stock Token (collateral) · real USDG (borrow asset, 6-decimal scaling) · Stylus PositionEngine and RiskEngine · Registry · Policy · Lending, Vault, and Transfer adapters · `canExecute()` computed live on every call · agent-intent SDK layer |
+| **Real / deployed** | Robinhood Chain testnet · real TSLA Stock Token (collateral) · real USDG (borrow asset, 6-decimal scaling) · Stylus PositionEngine and RiskEngine · Registry · Policy · Lending, Vault, Transfer, and Liquidation adapters · `canExecute()` computed live on every call · agent-intent SDK layer |
 | **Operator-configured** | Registry reference price ($364.27) · lifecycle state · collateral factor (70%) and risk adjustment (80%) |
 | **Not claimed** | Mainnet or production readiness · decentralized live equity pricing · automatic oracle-to-policy sync · support for every tokenized asset · third-party audit |
 
@@ -238,8 +238,9 @@ if (wouldOweTotal > response.permittedAmount) revert ExceedsPermittedAmount(woul
 ```
 
 **TypeScript.** `sdk/` is `@ledgerline/core`, a typed viem client over
-Registry, Policy, and the three adapters. It defaults to the testnet
-addresses and is not yet published to npm.
+Registry, Policy, and the four adapters (Lending, Vault, Transfer,
+Liquidation). It defaults to the testnet addresses and is not yet
+published to npm.
 
 ```ts
 import { LedgerLineClient, Action, evaluateAgentIntent, suggestRetryIntent } from "@ledgerline/core";
@@ -267,15 +268,19 @@ Robinhood Chain testnet (46630). Sourced from
 chain state. Block numbers and deploy transactions are in
 [`docs/DEPLOYMENTS.md`](docs/DEPLOYMENTS.md).
 
+**Current (V4).** Full history, deploy transactions, and why each
+contract cascaded are in [`docs/DEPLOYMENTS.md`](docs/DEPLOYMENTS.md).
+
 | Contract | Role | Address |
 |---|---|---|
 | `LedgerLineRegistry` | State store | [`0x88508A6d9266fbc928cC11DEE92f4EB1801B907c`](https://explorer.testnet.chain.robinhood.com/address/0x88508A6d9266fbc928cC11DEE92f4EB1801B907c) |
-| `LedgerLinePolicy` | `canExecute()` | [`0x22fA5c1C36Cc1F7557B932dE7aCDa354ee4F6F52`](https://explorer.testnet.chain.robinhood.com/address/0x22fA5c1C36Cc1F7557B932dE7aCDa354ee4F6F52) |
+| `LedgerLinePolicy` | `canExecute()` | [`0xD6ECf112af596E82DEb2EEb9e989eE6B093D5460`](https://explorer.testnet.chain.robinhood.com/address/0xD6ECf112af596E82DEb2EEb9e989eE6B093D5460) |
 | `PositionEngine` (Stylus) | Position value | [`0xde8365dAF3CFdF952E2F946F19a4DcAcd57eFf0F`](https://explorer.testnet.chain.robinhood.com/address/0xde8365dAF3CFdF952E2F946F19a4DcAcd57eFf0F) |
-| `RiskEngine` (Stylus) | Borrowing capacity | [`0xf661dA9D3f214A181014Bc7ba8590B90F9314eC4`](https://explorer.testnet.chain.robinhood.com/address/0xf661dA9D3f214A181014Bc7ba8590B90F9314eC4) |
-| `LedgerLineLendingAdapter` | BORROW consumer, custody | [`0x39E0d1F2877c69F1a617a86d4Bd4F8B3f2493C97`](https://explorer.testnet.chain.robinhood.com/address/0x39E0d1F2877c69F1a617a86d4Bd4F8B3f2493C97) |
-| `LedgerLineVaultAdapter` | WITHDRAW consumer (debt-safe) | [`0xfF7EC5218730AdbCAa14cdf205cc57F97D335A6b`](https://explorer.testnet.chain.robinhood.com/address/0xfF7EC5218730AdbCAa14cdf205cc57F97D335A6b) |
-| `LedgerLineTransferAdapter` | TRANSFER consumer | [`0xc5Af6A4a36b6e1b2B22D03b18bBA9FEA6D456943`](https://explorer.testnet.chain.robinhood.com/address/0xc5Af6A4a36b6e1b2B22D03b18bBA9FEA6D456943) |
+| `RiskEngine` (Stylus) | Borrowing capacity, `isLiquidatable()` | [`0x10246f909139Aa83f7C223012bDd656472b3C2bc`](https://explorer.testnet.chain.robinhood.com/address/0x10246f909139Aa83f7C223012bDd656472b3C2bc) |
+| `LedgerLineLendingAdapter` | BORROW/repay/deposit consumer, custody, `liquidate()` | [`0x5e559ADeb6B69E7c6f26c0aE51071a162Aa6560d`](https://explorer.testnet.chain.robinhood.com/address/0x5e559ADeb6B69E7c6f26c0aE51071a162Aa6560d) |
+| `LedgerLineVaultAdapter` | WITHDRAW consumer (debt-safe) | [`0x4E94e5AdB0b03Be4E9d7336Da7f847E4E4BA9C43`](https://explorer.testnet.chain.robinhood.com/address/0x4E94e5AdB0b03Be4E9d7336Da7f847E4E4BA9C43) |
+| `LedgerLineTransferAdapter` | TRANSFER consumer | [`0x32D47195108fE08aA518D9779689F83E2154D4f1`](https://explorer.testnet.chain.robinhood.com/address/0x32D47195108fE08aA518D9779689F83E2154D4f1) |
+| `LedgerLineLiquidationAdapter` | LIQUIDATE consumer (permissionless) | [`0xB24Af6a1bAfAB462DAa4776C0bc884Ce70B3a97d`](https://explorer.testnet.chain.robinhood.com/address/0xB24Af6a1bAfAB462DAa4776C0bc884Ce70B3a97d) |
 | `RobinhoodStockTokenAdapter` | Asset adapter (not wired into Registry) | [`0x3A1B5a91DBb68C39647B5a7Fe0aDD1a59Ec3dfb9`](https://explorer.testnet.chain.robinhood.com/address/0x3A1B5a91DBb68C39647B5a7Fe0aDD1a59Ec3dfb9) |
 | TSLA Stock Token | Collateral, 18 decimals | [`0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E`](https://explorer.testnet.chain.robinhood.com/address/0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E) |
 | USDG | Borrow asset, 6 decimals | [`0x7E955252E15c84f5768B83c41a71F9eba181802F`](https://explorer.testnet.chain.robinhood.com/address/0x7E955252E15c84f5768B83c41a71F9eba181802F) |
@@ -287,8 +292,8 @@ with `cargo stylus deploy` outside Foundry's broadcast mechanism.
 ## Tests
 
 ```bash
-cd contracts && forge test                          # 31 tests: unit, fuzz, decimal scaling, adapter suites
-cd sdk && npm test                                  # agent-intent layer (stub client, no RPC)
+cd contracts && forge test                          # 66 tests: unit, fuzz, decimal scaling, adapter suites (incl. liquidation)
+cd sdk && npm test                                  # 33 tests: agent-intent layer (stub client, no RPC)
 cd stylus/position-engine && cargo test             # PositionEngine math
 cd stylus/risk-engine && cargo test                 # RiskEngine math
 cd frontend && npm run build                        # type-check + production build
