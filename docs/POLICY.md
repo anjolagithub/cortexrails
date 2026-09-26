@@ -196,7 +196,7 @@ changes hands — there is nothing to recompute. Tested directly:
 (even $1 of debt blocks any transfer amount) and
 `test_transferAllowedWithZeroDebt`.
 
-## LIQUIDATE behavior (implemented and tested, not deployed)
+## LIQUIDATE behavior (implemented, tested, and deployed since V3/V4)
 
 ```solidity
 if (action == Action.LIQUIDATE) {
@@ -211,9 +211,11 @@ if (action == Action.LIQUIDATE) {
 Asks whether a position is under-collateralized. Liquidation eligibility
 depends on debt, but `Policy` stays debt-agnostic: debt lives in the
 lending market, never in Registry. So for this action only, **`amount`
-is the position's outstanding debt**, supplied by the caller. A future
-liquidation consumer would pass `lendingAdapter.debt(user)`, the same
-trust pattern BORROW already relies on for cumulative debt.
+is the position's outstanding debt**, supplied by the caller.
+`LedgerLineLiquidationAdapter` (deployed since V4, `docs/DEPLOYMENTS.md`)
+is that caller: it passes `lendingAdapter.debt(user)`, the same trust
+pattern BORROW already relies on for cumulative debt, and never a
+caller-supplied figure it can't verify.
 
 The maths lives in the Stylus `RiskEngine`
 (`stylus/risk-engine/src/lib.rs`):
@@ -234,14 +236,19 @@ loan-to-value and become liquidatable above 70%.
 The lifecycle short-circuit still applies first, so a non-`ACTIVE`
 asset blocks liquidation too. Zero debt is never liquidatable.
 
-**Status:** code and tests only. There is no liquidation consumer
-adapter yet, the same way TRANSFER's policy branch preceded its adapter.
-The deployed `LedgerLinePolicy` and Stylus `RiskEngine` on testnet are
-immutable and don't contain this branch. Tests:
+**Status:** live. The deployed `LedgerLinePolicy`
+(`0xD6ECf112af596E82DEb2EEb9e989eE6B093D5460`, unchanged since V3) and
+Stylus `RiskEngine` contain this branch, and `LedgerLineLiquidationAdapter`
+(deployed V4) is the real, permissionless consumer that calls it and
+acts on `ALLOW`. This section previously said "code and tests only" —
+that described the V1/V2 state, before the V3 Policy redeploy added
+this branch and the V4 LiquidationAdapter gave it a real caller. Tests:
 `contracts/test/LedgerLineLiquidate.t.sol` (above, below, and exactly at
 the boundary; non-ACTIVE; a real full-capacity borrow that becomes
 liquidatable after a price drop; BORROW, WITHDRAW, and TRANSFER
-decisions unchanged) and the `RiskEngine` unit tests and proptests.
+decisions unchanged), `contracts/test/LedgerLineLiquidationAdapter.t.sol`
+(the adapter itself, 10 tests), and the `RiskEngine` unit tests and
+proptests.
 
 ## Why BORROW, WITHDRAW, and TRANSFER are different policies
 

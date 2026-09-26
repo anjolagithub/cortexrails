@@ -212,16 +212,16 @@ matter most:
   TSLA data, but it is not wired into the live decision path, and no
   Chainlink tokenized-equity feed exists for Robinhood Chain testnet
   (details in [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md)).
-- **`repay()` is implemented, not deployed.** On the live testnet, debt
-  is permanent once borrowed, so a position that has borrowed can never
-  pass TransferAdapter's debt check again, and VaultAdapter only lets it
-  withdraw down to what still covers the debt. `repay()` exists in the
-  repo's `LedgerLineLendingAdapter` and is tested, but the deployed
-  adapter is immutable and doesn't have it.
-- **LIQUIDATE is implemented, not deployed.** The Policy branch and the
-  RiskEngine maintenance-threshold maths exist in the repo and are
-  tested, but the deployed Policy and RiskEngine don't contain them,
-  and no liquidation consumer adapter exists yet.
+- **`repay()` and LIQUIDATE are both deployed and live** (V3/V4,
+  `docs/DEPLOYMENTS.md`) via the current `LedgerLineLendingAdapter`
+  and the permissionless `LedgerLineLiquidationAdapter`. The real,
+  current limitation is that `debt` is per-instance state: every time
+  `LendingAdapter` has been redeployed to ship a new function, the new
+  instance's debt mapping starts at zero, and debt against a
+  superseded instance is only repayable through that old contract.
+  Also, whether a position is actually liquidatable still depends on
+  the same owner-set Registry price as every other decision (see the
+  oracle bullet above), not a live market feed.
 - **Policy is debt-agnostic.** For BORROW, `canExecute()` compares only
   the new request to capacity. Consumers must add existing debt
   themselves, as `LedgerLineLendingAdapter` does.
@@ -358,22 +358,12 @@ tokens, and each is now regression-tested:
 
 ## Roadmap
 
-Natural next additions, given the current, disclosed scope boundaries:
+Natural next additions, given the current, disclosed scope boundaries.
+(`repay()` and `Action.LIQUIDATE` used to be listed here as
+"implemented, not deployed" -- both shipped in the V3/V4 redeploys,
+`docs/DEPLOYMENTS.md`, and are live today, so they've moved off this
+list.)
 
-- **`repay()` on `LedgerLineLendingAdapter`: implemented, not
-  deployed.** It takes an 18-decimal amount and rounds the USDG pulled
-  up, so a repayment never cancels more debt than it pays for. Lifecycle
-  doesn't gate it, so borrowers can always repay. Tests:
-  `contracts/test/LedgerLineRepay.t.sol`. Going live means redeploying
-  the lending adapter.
-- **`Action.LIQUIDATE`: implemented, not deployed.** It has a
-  `LedgerLinePolicy` branch where `amount` is the caller-supplied
-  outstanding debt, so Policy stays debt-agnostic. A position becomes
-  eligible when its debt is strictly above the maintenance threshold
-  (`value × collateralFactorBps`), which the Stylus `RiskEngine`
-  computes. Details in [`docs/POLICY.md`](docs/POLICY.md); tests:
-  `contracts/test/LedgerLineLiquidate.t.sol`. What's still missing is a
-  liquidation consumer adapter and a redeploy of Policy and RiskEngine.
 - **Oracle-to-Registry sync.** `sdk/scripts/oracle-sync.ts` reads a
   mock price feed, not a real oracle, and by default only prints the
   lifecycle transition it would make. It sends a transaction only when

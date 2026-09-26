@@ -6,8 +6,11 @@ reading the contracts and their tests. **This is not an audit, does
 not claim audit coverage, and does not claim any guarantee the code
 doesn't actually enforce.** It extends and updates the Phase 6 review
 (`../SECURITY.md`, still present at the repo root) through Phase 10
-(`LedgerLineVaultAdapter`) and the real Robinhood Chain / TSLA / USDG
-integration.
+(`LedgerLineVaultAdapter`), the real Robinhood Chain / TSLA / USDG
+integration, and the V3/V4 redeploys that added `repay()` and a real
+LIQUIDATE consumer (`docs/DEPLOYMENTS.md`) — points 7 and 8 below
+reflect that current state, not the pre-V3 state this document
+originally described.
 
 ## Access control
 
@@ -117,17 +120,27 @@ updated before the external `safeTransfer` call.
    full redeploy.
 6. **No professional audit has been performed on any part of this
    codebase.**
-7. **`LedgerLineLendingAdapter` has no `repay()` function, or any
-   other way to reduce `debt` once borrowed.** Debt is permanent for a
-   given position under the current contracts — there is no path to
-   pay down or clear it. This is a real, disclosed gap in the current
-   scope, not by-design the way the WITHDRAW/debt interaction is
-   (that one is an intentional decision, tested and documented above
-   and in `docs/POLICY.md`; this one is simply missing functionality).
-   It also means `TransferAdapter`'s "any outstanding debt blocks the
-   transfer" rule and `VaultAdapter`'s debt-safety check are currently
-   permanent once triggered for a position — a position that has ever
-   borrowed anything can never again pass either check.
+7. **`repay()` is deployed and live** (as of the V3 redeploy,
+   `docs/DEPLOYMENTS.md`) — this point previously said the opposite;
+   that was true of the V1/V2 `LedgerLineLendingAdapter` instances but
+   is no longer true of the current one. The real, still-current
+   limitation: `debt` is per-instance state. Every time
+   `LedgerLineLendingAdapter` has been redeployed (V2→V3 to add
+   `repay()`/LIQUIDATE, V3→V4 to add `liquidate()`), the new instance's
+   `debt` mapping starts at zero for every position — any debt against
+   a superseded instance is only repayable through that old, abandoned
+   contract, it does not carry over. This is a real cost paid at every
+   redeploy, disclosed in `docs/DEPLOYMENTS.md`'s "Known real cost"
+   notes, not a hidden one.
+8. **LIQUIDATE is deployed and live** via the permissionless
+   `LedgerLineLiquidationAdapter` (`docs/DEPLOYMENTS.md`'s V4 section)
+   — this document predates that adapter's existence, hence its
+   absence above. The same oracle limitation as point 2 applies here
+   too: whether a position is *actually* liquidatable still depends on
+   the same owner-set Registry price as every other decision, not a
+   live market feed. A real liquidation bot built on this adapter
+   would need real price data wired into Registry before it could run
+   unattended against real market conditions.
 
 ## Fixed since the last revision of this document
 
