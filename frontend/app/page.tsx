@@ -195,9 +195,22 @@ export default function Landing() {
           <p>The result is a provable, closed-form finding: at the testnet&apos;s live parameters, a full-capacity borrower becomes liquidatable the instant the asset falls exactly 20% below the price they borrowed at -- no more, no less. <a href={`${REPO}/blob/master/docs/ANALYSIS.md`} target="_blank" rel="noreferrer" className="text-terminal-text underline underline-offset-4">Full methodology and data in docs/ANALYSIS.md</a>.</p>
         </SectionHeading>
         <div className="flex flex-col gap-6">
-          <div className="signal-card font-mono text-xs leading-7 text-terminal-muted sm:text-sm">
-            <div className="text-terminal-text">Worked example -- the November 2021 all-time high</div>
-            A borrower opens a full-capacity position on <span className="text-terminal-text">2021-11-04</span> at <span className="text-terminal-text">$409.97</span>. CortexRails&apos; live 80% risk adjustment puts their liquidation trigger at <span className="text-terminal-text">$327.98</span>. TSLA&apos;s real price first crosses below that line on <span className="text-terminal-text">2021-12-13</span>, at <span className="text-terminal-text">$322.14</span> -- <span className="text-decision-limit">26 real trading days later</span>.
+          <div className="signal-card flex flex-col gap-4">
+            <div className="font-mono text-[.6rem] uppercase tracking-[.14em] text-terminal-muted">Worked example &mdash; the November 2021 all-time high</div>
+            <div className="flex flex-col gap-3 font-mono text-xs sm:text-sm">
+              <div className="flex items-baseline justify-between gap-4 border-b border-terminal-border pb-3">
+                <span className="text-terminal-muted">Entry &middot; 2021-11-04</span>
+                <span className="text-terminal-text">$409.97</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 border-b border-terminal-border pb-3">
+                <span className="text-terminal-muted">Liquidation trigger (80% risk adjustment)</span>
+                <span className="text-terminal-text">$327.98</span>
+              </div>
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="text-terminal-muted">Crossed &middot; 2021-12-13</span>
+                <span className="text-decision-limit">$322.14 &mdash; 26 trading days later</span>
+              </div>
+            </div>
           </div>
           <div className="hero-proof-grid"><div><strong>70%</strong><span>of historical entry days eventually crossed the trigger</span></div><div><strong>72</strong><span>median trading days to liquidation</span></div><div><strong>1</strong><span>fastest trading day to trigger</span></div></div>
         </div>
