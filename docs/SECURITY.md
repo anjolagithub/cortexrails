@@ -113,7 +113,25 @@ updated before the external `safeTransfer` call.
    ≤ 10,000 (fixed and fuzz-tested this phase) but does not bound
    `price`** beyond the arithmetic consequence of a zero price yielding
    zero capacity — there is no sanity or deviation check on price
-   updates.
+   updates *inside Registry itself*. As of this phase, an optional
+   `LedgerLineRegistryUpdateGuard` (`contracts/src/LedgerLineRegistryUpdateGuard.sol`,
+   9 tests including a 256-run fuzz test) closes this at the ownership
+   layer instead of inside Registry: Registry ownership is transferred
+   to the guard, which becomes the only path to
+   `updateAssetParameters` and rejects any single update that moves
+   price more than a configured basis-point threshold, or that arrives
+   before a configured minimum interval has elapsed. This is a narrow,
+   disclosed mitigation, not a general fix -- it does not touch
+   custody or key management, and it cannot stop a fully compromised
+   owner key from pushing many small, individually-compliant bad
+   updates over time. It was added in direct response to this
+   limitation and to the September 2026 Bitget breach, where a single
+   compromised backend component pushed unbounded fabricated data
+   through an internal approval path with no step-size limit at all.
+   Deploying the guard (transferring live Registry ownership to it) is
+   a separate, deliberate operational decision from writing and
+   testing it -- see `docs/DEPLOYMENTS.md` for whether that transfer
+   has actually happened on the live testnet instance.
 4. **The V1 `LedgerLineLendingAdapter`
    (`0x598e3884657c8eF4870381E4c1Cc4e8e2D0dbcB7`) is permanently
    abandoned** with 1 real TSLA stranded in it — it predates
