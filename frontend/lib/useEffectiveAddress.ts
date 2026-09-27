@@ -25,18 +25,25 @@ export function useEffectiveAddress(): {
   address: Address | undefined;
   isConnected: boolean;
   isReadOnly: boolean;
+  /// Set when `?viewAs=` is present but isn't a full, valid address --
+  /// surfaced by PolicyConsole as a visible error instead of silently
+  /// falling through to the disconnected state.
+  viewAsError: boolean;
 } {
   const { address: connectedAddress, isConnected } = useAccount();
   const searchParams = useSearchParams();
   const viewAsParam = searchParams.get("viewAs");
 
   if (connectedAddress) {
-    return { address: connectedAddress, isConnected: true, isReadOnly: false };
+    return { address: connectedAddress, isConnected: true, isReadOnly: false, viewAsError: false };
   }
 
-  if (viewAsParam && isAddress(viewAsParam)) {
-    return { address: viewAsParam, isConnected: false, isReadOnly: true };
+  if (viewAsParam) {
+    if (isAddress(viewAsParam)) {
+      return { address: viewAsParam, isConnected: false, isReadOnly: true, viewAsError: false };
+    }
+    return { address: undefined, isConnected: false, isReadOnly: false, viewAsError: true };
   }
 
-  return { address: undefined, isConnected: false, isReadOnly: false };
+  return { address: undefined, isConnected: false, isReadOnly: false, viewAsError: false };
 }

@@ -10,13 +10,19 @@ export function WithdrawForm({
   symbol,
   lifecycle,
   isReadOnly,
+  isDemoPreview,
 }: {
   positionRawBalance: bigint | undefined;
   symbol: string | undefined;
   lifecycle: number | undefined;
   isReadOnly?: boolean;
+  isDemoPreview?: boolean;
 }) {
-  const [amount, setAmount] = useState("");
+  // No forced/fake decision here -- withdraw uses real live position
+  // data and the existing lifecycle-active check either way. The demo
+  // param only presets a sample amount so a walkthrough doesn't start
+  // on an empty field.
+  const [amount, setAmount] = useState(() => (isDemoPreview ? "1" : ""));
   const parsedAmount = amount ? BigInt(Math.floor(Number(amount))) * ONE : 0n;
 
   const exceedsPosition =

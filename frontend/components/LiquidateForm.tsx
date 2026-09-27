@@ -34,9 +34,15 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as const;
 /// call have any chance of succeeding. Permissionless -- any connected
 /// wallet can check or liquidate any borrower's position, not just its
 /// own.
-export function LiquidateForm() {
+export function LiquidateForm({ demoPresetBorrower }: { demoPresetBorrower?: string } = {}) {
   const { address, isReadOnly } = useEffectiveAddress();
-  const [borrowerInput, setBorrowerInput] = useState("");
+  // No fabricated liquidatable state -- the repo doesn't define a
+  // standing demo/test borrower (per constraint: don't hardcode one
+  // unless the repo already defines it), so this only prefills the
+  // input from NEXT_PUBLIC_DEMO_LIQUIDATABLE_BORROWER when an operator
+  // has set one, and otherwise leaves the field for a real address with
+  // real debt above threshold. Every read below stays live either way.
+  const [borrowerInput, setBorrowerInput] = useState(demoPresetBorrower ?? "");
   const [repayAmount, setRepayAmount] = useState("");
   const [seizeAmount, setSeizeAmount] = useState("");
 
