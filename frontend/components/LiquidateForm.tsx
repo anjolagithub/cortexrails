@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { isAddress, type Address } from "viem";
+import { useEffectiveAddress } from "@/lib/useEffectiveAddress";
 import {
   REGISTRY,
   POLICY,
@@ -34,7 +35,7 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as const;
 /// wallet can check or liquidate any borrower's position, not just its
 /// own.
 export function LiquidateForm() {
-  const { address } = useAccount();
+  const { address, isReadOnly } = useEffectiveAddress();
   const [borrowerInput, setBorrowerInput] = useState("");
   const [repayAmount, setRepayAmount] = useState("");
   const [seizeAmount, setSeizeAmount] = useState("");
@@ -120,10 +121,11 @@ export function LiquidateForm() {
     liquidateTx.status === "wallet-confirmation" || liquidateTx.status === "pending";
 
   const approveDisabled =
-    !address || requiredUsdg === 0n ||
+    !address || isReadOnly || requiredUsdg === 0n ||
     approveTx.status === "wallet-confirmation" || approveTx.status === "pending";
   const liquidateDisabled =
     !address ||
+    isReadOnly ||
     !isLiquidatable ||
     parsedRepay === 0n ||
     parsedSeize === 0n ||
@@ -277,7 +279,7 @@ export function LiquidateForm() {
                 }
                 className="form-action form-action-primary flex-1"
               >
-                Liquidate
+                {isReadOnly ? "Read-only" : "Liquidate"}
               </button>
             </div>
           )}

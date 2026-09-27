@@ -9,10 +9,12 @@ export function WithdrawForm({
   positionRawBalance,
   symbol,
   lifecycle,
+  isReadOnly,
 }: {
   positionRawBalance: bigint | undefined;
   symbol: string | undefined;
   lifecycle: number | undefined;
+  isReadOnly?: boolean;
 }) {
   const [amount, setAmount] = useState("");
   const parsedAmount = amount ? BigInt(Math.floor(Number(amount))) * ONE : 0n;
@@ -23,7 +25,7 @@ export function WithdrawForm({
 
   const tx = useTransactionFlow();
   const submitting = tx.status === "wallet-confirmation" || tx.status === "pending";
-  const disabled = !amount || exceedsPosition || !isActive || submitting;
+  const disabled = !amount || exceedsPosition || !isActive || submitting || isReadOnly;
 
   return (
     <div className="form-card">
@@ -70,7 +72,7 @@ export function WithdrawForm({
             }
             className="form-action form-action-primary"
           >
-            Withdraw
+            {isReadOnly ? "Read-only view — connect a wallet to submit" : "Withdraw"}
           </button>
         )}
       </div>

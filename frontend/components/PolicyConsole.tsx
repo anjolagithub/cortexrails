@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { ASSET_ID, ONE, REGISTRY, STOCK_TOKEN, formatUnits18, bpsToPercent, LIFECYCLE_LABELS } from "@/lib/contracts";
 import { EXPLORER_TX_BASE_URL, describeRow, formatRelativeTime } from "@/lib/activity";
 import { useActivityRows } from "@/lib/useActivityRows";
+import { useEffectiveAddress } from "@/lib/useEffectiveAddress";
 import { ConnectButton } from "./ConnectButton";
 import { DepositForm } from "./DepositForm";
 import { BorrowForm } from "./BorrowForm";
@@ -14,7 +15,7 @@ import { TransferForm } from "./TransferForm";
 import { LiquidateForm } from "./LiquidateForm";
 
 export function PolicyConsole() {
-  const { address } = useAccount();
+  const { address, isReadOnly } = useEffectiveAddress();
   const [operatorMode, setOperatorMode] = useState(false);
   const [demoLifecycle, setDemoLifecycle] = useState<number | undefined>();
   const positionId = address ? BigInt(address) : 0n;
@@ -30,6 +31,7 @@ export function PolicyConsole() {
 
   return <section id="policy-console" className="console-shell scroll-mt-24 border border-terminal-border bg-terminal-surface p-5 md:p-7" aria-labelledby="policy-console-title">
     <div className="mb-7 flex flex-col gap-4 border-b border-terminal-border pb-5 sm:flex-row sm:items-start sm:justify-between"><div><p className="eyebrow">Policy evaluation</p><h2 id="policy-console-title" className="mt-2 text-2xl font-semibold tracking-tight">Policy Console</h2><p className="mt-2 max-w-xl text-sm text-terminal-muted">Read live from the deployed Registry and Policy before any financial action executes.</p></div><ConnectButton /></div>
+    {isReadOnly && <p className="mb-6 rounded-[.6rem] border border-decision-review/30 bg-decision-review/5 px-3 py-2 font-mono text-[10px] uppercase tracking-[.1em] text-decision-review">Read-only view of a real position (?viewAs) — every value below is live onchain data; connect a wallet to submit an action.</p>}
     <div className="space-y-6">
       <div className="console-data-grid"><div><span>Asset</span><strong>{symbol ?? "—"}</strong><small>Robinhood Stock Token</small></div><div><span>Lifecycle</span><strong className="text-decision-allow">● {displayLifecycle}</strong><small>Owner-configured on testnet</small></div><div><span>Price</span><strong>${formatUnits18(state?.price)}</strong><small>Position {formatUnits18(position?.rawBalance)} {symbol ?? ""}</small></div><div><span>Position value</span><strong>${formatUnits18(positionValue)}</strong><small>Collateral factor {bpsToPercent(state?.collateralFactorBps)}</small></div></div>
       <DepositForm />
@@ -37,7 +39,7 @@ export function PolicyConsole() {
       {operatorMode && demoLifecycle !== undefined && demoLifecycle !== state?.lifecycle && <p className="rounded-[.6rem] border border-decision-limit/30 bg-decision-limit/5 px-3 py-2 font-mono text-[10px] text-decision-limit">Local preview only — the onchain lifecycle is still {state ? LIFECYCLE_LABELS[state.lifecycle] : "—"}. Only the Registry owner can transition it.</p>}
       <div className="grid gap-7 xl:grid-cols-3">
         <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Policy decision · Borrow</span><span className="font-mono text-[10px] text-terminal-muted">canExecute()</span></div><BorrowForm positionValue={positionValue} collateralFactorBps={state?.collateralFactorBps} riskAdjustmentBps={state?.riskAdjustmentBps} effectiveCapacity={capacity} lifecycle={lifecycle} /></div>
-        <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Policy decision · Withdraw</span><span className="font-mono text-[10px] text-terminal-muted">withdraw()</span></div><WithdrawForm positionRawBalance={position?.rawBalance} symbol={symbol} lifecycle={lifecycle} /></div>
+        <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Policy decision · Withdraw</span><span className="font-mono text-[10px] text-terminal-muted">withdraw()</span></div><WithdrawForm positionRawBalance={position?.rawBalance} symbol={symbol} lifecycle={lifecycle} isReadOnly={isReadOnly} /></div>
         <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Policy decision · Transfer</span><span className="font-mono text-[10px] text-terminal-muted">transfer()</span></div><TransferForm positionRawBalance={position?.rawBalance} symbol={symbol} lifecycle={lifecycle} /></div>
       </div>
       <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Policy decision · Liquidate</span><span className="font-mono text-[10px] text-terminal-muted">liquidate()</span></div><LiquidateForm /></div>

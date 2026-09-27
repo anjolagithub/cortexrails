@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { POLICY, LENDING_ADAPTER, ASSET_ID, ONE } from "@/lib/contracts";
+import { useEffectiveAddress } from "@/lib/useEffectiveAddress";
 import { useTransactionFlow } from "@/lib/useTransactionFlow";
 import { PolicyEquation } from "./PolicyEquation";
 import { PolicyVerdict } from "./PolicyVerdict";
@@ -21,7 +22,7 @@ export function BorrowForm({
   effectiveCapacity: bigint | undefined;
   lifecycle: number | undefined;
 }) {
-  const { address } = useAccount();
+  const { address, isReadOnly } = useEffectiveAddress();
   const [amount, setAmount] = useState("");
   const parsedAmount = amount && Number.isFinite(Number(amount))
     ? BigInt(Math.max(0, Math.floor(Number(amount)))) * ONE
@@ -103,7 +104,7 @@ export function BorrowForm({
           </button>
         ) : (
           <button
-            disabled={!isReady || !canSubmit || submitting}
+            disabled={!isReady || !canSubmit || submitting || isReadOnly}
             onClick={() =>
               tx.execute({
                 address: LENDING_ADAPTER.address,
@@ -114,7 +115,7 @@ export function BorrowForm({
             }
             className="form-action form-action-primary"
           >
-            {canSubmit ? "Borrow" : "Preview only — adjust amount"}
+            {isReadOnly ? "Read-only view — connect a wallet to submit" : canSubmit ? "Borrow" : "Preview only — adjust amount"}
           </button>
         )}
         <TransactionStatus status={tx.status} hash={tx.hash} message={tx.message} />

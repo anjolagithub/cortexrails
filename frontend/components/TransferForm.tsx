@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useReadContract } from "wagmi";
+import { useReadContract } from "wagmi";
 import { isAddress, type Address } from "viem";
 import { LENDING_ADAPTER, TRANSFER_ADAPTER, ONE, formatUnits18 } from "@/lib/contracts";
+import { useEffectiveAddress } from "@/lib/useEffectiveAddress";
 import { useTransactionFlow } from "@/lib/useTransactionFlow";
 import { TransactionStatus } from "./TransactionStatus";
 
@@ -18,7 +19,7 @@ export function TransferForm({
   symbol: string | undefined;
   lifecycle: number | undefined;
 }) {
-  const { address } = useAccount();
+  const { address, isReadOnly } = useEffectiveAddress();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const parsedAmount = amount ? BigInt(Math.floor(Number(amount))) * ONE : 0n;
@@ -49,7 +50,8 @@ export function TransferForm({
     exceedsPosition ||
     !isActive ||
     hasOutstandingDebt ||
-    submitting;
+    submitting ||
+    isReadOnly;
 
   return (
     <div className="form-card">
@@ -114,7 +116,7 @@ export function TransferForm({
             }
             className="form-action form-action-primary"
           >
-            Transfer
+            {isReadOnly ? "Read-only view — connect a wallet to submit" : "Transfer"}
           </button>
         )}
       </div>
