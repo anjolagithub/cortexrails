@@ -5,12 +5,12 @@ import { useReadContract } from "wagmi";
 import { POLICY, LENDING_ADAPTER, ASSET_ID, ONE } from "@/lib/contracts";
 import { useEffectiveAddress } from "@/lib/useEffectiveAddress";
 import { useTransactionFlow } from "@/lib/useTransactionFlow";
-import { DEMO_BORROW_LIMIT, DEMO_BORROW_ALLOW_PRESET_AMOUNT } from "@/lib/demoScenarios";
+import { DEMO_BORROW_LIMIT_PREVIEW } from "@/lib/demoScenarios";
 import { PolicyEquation } from "./PolicyEquation";
 import { PolicyVerdict } from "./PolicyVerdict";
 import { TransactionStatus } from "./TransactionStatus";
 
-type BorrowDemoOverride = { kind: "borrow-limit" } | { kind: "borrow-allow" };
+type BorrowDemoOverride = { kind: "borrow" };
 
 export function BorrowForm({
   positionValue,
@@ -28,42 +28,49 @@ export function BorrowForm({
   demoOverride?: BorrowDemoOverride;
 }) {
   const { address, isReadOnly } = useEffectiveAddress();
-  const isLimitPreview = demoOverride?.kind === "borrow-limit";
-  const [amount, setAmount] = useState(() =>
-    demoOverride?.kind === "borrow-limit" ? "1001" : demoOverride?.kind === "borrow-allow" ? DEMO_BORROW_ALLOW_PRESET_AMOUNT : ""
-  );
+  const isBorrowDemo = demoOverride?.kind === "borrow";
+  const [amount, setAmount] = useState(() => (isBorrowDemo ? DEMO_BORROW_LIMIT_PREVIEW.amount : ""));
+
+  // Single panel, single URL, no navigation: the frozen illustrative
+  // LIMIT preview is shown ONLY while the field still reads exactly
+  // "1001" (the preset value). It's derived straight from `amount` on
+  // every render -- not a one-time flag set in an effect or onChange --
+  // so it can't get stuck out of sync no matter how a browser-automation
+  // tool edits the field (clear+type, fill(), paste, etc.). The instant
+  // the value differs (e.g. "5"), isFrozenPreview flips off and every
+  // line below falls straight through to the exact same live
+  // useReadContract(canExecute) / writeContract(borrow) calls LIVE MODE
+  // always used -- nothing about that path is touched by demo mode.
+  const isFrozenPreview = isBorrowDemo && amount.trim() === DEMO_BORROW_LIMIT_PREVIEW.amount;
+
   const parsedAmount = amount && Number.isFinite(Number(amount))
     ? BigInt(Math.max(0, Math.floor(Number(amount)))) * ONE
     : 0n;
   const positionId = address ? BigInt(address) : 0n;
 
-  // The LIMIT preview never calls canExecute -- it displays a fixed,
-  // clearly-labeled illustrative response instead (see DemoModeBanner).
-  // `borrow-allow` sets no override here at all: it only preset the
-  // amount above and otherwise runs this exact same live query, because
-  // the real ALLOW -> real borrow() -> explorer link is the one leg of
-  // the demo that must stay genuine.
   const policyRead = useReadContract({
     address: POLICY.address,
     abi: POLICY.abi,
     functionName: "canExecute",
     args: [ASSET_ID, positionId, 0, parsedAmount], // Action.BORROW = 0
-    query: { enabled: !isLimitPreview && !!address && parsedAmount > 0n, retry: 2 },
+    query: { enabled: !isFrozenPreview && !!address && parsedAmount > 0n, retry: 2 },
   });
-  const response = isLimitPreview
-    ? DEMO_BORROW_LIMIT.response
+  const response = isFrozenPreview
+    ? DEMO_BORROW_LIMIT_PREVIEW.response
     : (policyRead.data as { decision: number; permittedAmount: bigint; reason: string } | undefined);
-  const isEvaluating = !isLimitPreview && policyRead.isLoading;
-  const evaluationError = !isLimitPreview && policyRead.error;
+  const isEvaluating = !isFrozenPreview && policyRead.isLoading;
+  const evaluationError = !isFrozenPreview && policyRead.error;
 
   const tx = useTransactionFlow();
   const decisionLabel = response ? ["ALLOW", "LIMIT", "REVIEW", "BLOCK"][response.decision] : undefined;
-  // LIMIT preview never allows a real submit -- it's illustration only,
-  // per "Do not fake a transaction."
-  const canSubmit = !isLimitPreview && decisionLabel === "ALLOW";
+  // The frozen preview never allows a real submit -- it's illustration
+  // only, per "Do not fake a transaction." The moment it's unfrozen
+  // (amount changed), canSubmit is driven entirely by the real
+  // decisionLabel from the live canExecute response, same as LIVE MODE.
+  const canSubmit = !isFrozenPreview && decisionLabel === "ALLOW";
   const hasAmount = parsedAmount > 0n;
-  const isReady = isLimitPreview ? true : !!address && hasAmount && !isEvaluating && !!response;
-  const evaluationMessage = isLimitPreview
+  const isReady = isFrozenPreview ? true : !!address && hasAmount && !isEvaluating && !!response;
+  const evaluationMessage = isFrozenPreview
     ? undefined
     : !address
     ? "Connect a wallet to evaluate this position."
@@ -82,10 +89,10 @@ export function BorrowForm({
         <div className="form-card-title">Policy Evaluation</div>
 
         <PolicyEquation
-          positionValue={isLimitPreview ? DEMO_BORROW_LIMIT.positionValue : positionValue}
-          collateralFactorBps={isLimitPreview ? DEMO_BORROW_LIMIT.collateralFactorBps : collateralFactorBps}
-          riskAdjustmentBps={isLimitPreview ? DEMO_BORROW_LIMIT.riskAdjustmentBps : riskAdjustmentBps}
-          effectiveCapacity={isLimitPreview ? DEMO_BORROW_LIMIT.effectiveCapacity : effectiveCapacity}
+          positionValue={isFrozenPreview ? DEMO_BORROW_LIMIT_PREVIEW.positionValue : positionValue}
+          collateralFactorBps={isFrozenPreview ? DEMO_BORROW_LIMIT_PREVIEW.collateralFactorBps : collateralFactorBps}
+          riskAdjustmentBps={isFrozenPreview ? DEMO_BORROW_LIMIT_PREVIEW.riskAdjustmentBps : riskAdjustmentBps}
+          effectiveCapacity={isFrozenPreview ? DEMO_BORROW_LIMIT_PREVIEW.effectiveCapacity : effectiveCapacity}
         />
 
         <div className="mt-4">
@@ -124,7 +131,7 @@ export function BorrowForm({
           </button>
         ) : (
           <button
-            disabled={isLimitPreview || !isReady || !canSubmit || submitting || isReadOnly}
+            disabled={isFrozenPreview || !isReady || !canSubmit || submitting || isReadOnly}
             onClick={() =>
               tx.execute({
                 address: LENDING_ADAPTER.address,
@@ -135,8 +142,8 @@ export function BorrowForm({
             }
             className="form-action form-action-primary"
           >
-            {isLimitPreview
-              ? "Demo preview only — no transaction sent"
+            {isFrozenPreview
+              ? "Change the amount to evaluate live — demo preview, no transaction sent"
               : isReadOnly
               ? "Read-only view — connect a wallet to submit"
               : canSubmit

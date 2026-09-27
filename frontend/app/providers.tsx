@@ -10,8 +10,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // rate-limited RPC, etc.) retries a couple of times with backoff
   // instead of taking down whichever panel happened to be reading it,
   // and a stale response isn't silently trusted forever. Individual
-  // reads that need different behavior (e.g. the borrow-limit demo
-  // preview, which must never hit the network at all) opt out via their
+  // reads that need different behavior (e.g. the frozen $1,001 borrow
+  // demo preview, which must never hit the network at all) opt out via their
   // own `query: { enabled: false }` / `retry` as before -- this only
   // sets the default the rest of the app already relied on implicitly.
   const [queryClient] = useState(

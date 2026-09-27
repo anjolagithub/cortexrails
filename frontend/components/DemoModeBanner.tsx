@@ -1,8 +1,7 @@
 import type { DemoScenarioId } from "@/lib/demoScenarios";
 
 const SCENARIO_COPY: Record<DemoScenarioId, string> = {
-  "borrow-limit": "Borrow · LIMIT preview — illustrative position/capacity values, not live chain data.",
-  "borrow-allow": "Borrow · ALLOW preview — amount preset to $5; submitting still sends a real testnet transaction.",
+  "borrow": "Borrow — opens at $1,001 (illustrative LIMIT preview); change the amount and it switches to the real live policy check and, on ALLOW, a real transaction.",
   "transfer-block": "Transfer · BLOCK preview — illustrative outstanding-debt state, not live chain data.",
   "withdraw": "Withdraw demo — live position data, amount field ready for a walkthrough.",
   "liquidation": "Liquidation demo — enter a borrower with real outstanding debt above threshold to see a live decision.",

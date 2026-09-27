@@ -13,15 +13,13 @@ import { ONE } from "./contracts";
 /// unchanged existing behavior), and never overrides the real
 /// canExecute/write calls used for actual execution.
 export type DemoScenarioId =
-  | "borrow-limit"
-  | "borrow-allow"
+  | "borrow"
   | "transfer-block"
   | "withdraw"
   | "liquidation";
 
 const DEMO_SCENARIO_IDS: readonly DemoScenarioId[] = [
-  "borrow-limit",
-  "borrow-allow",
+  "borrow",
   "transfer-block",
   "withdraw",
   "liquidation",
@@ -41,11 +39,25 @@ export function useDemoScenario(): DemoScenarioId | null {
   return isDemoScenarioId(raw) ? raw : null;
 }
 
-/// Purely illustrative numbers for the `borrow-limit` preview -- never
-/// read from or written to any contract. Chosen so
+/// The `borrow` scenario is ONE panel, ONE URL, covering the whole
+/// LIMIT -> ALLOW -> real execution arc without navigating anywhere:
+///
+/// - BorrowForm opens with the amount field preset to "1001". As long
+///   as the field reads exactly "1001", it shows this fixed,
+///   clearly-labeled illustrative preview instead of calling
+///   canExecute -- deterministic on purpose, so a browser agent doesn't
+///   depend on live chain timing just to see the LIMIT state once.
+/// - The MOMENT the amount changes to anything else (e.g. "5"), the
+///   preview switches off and BorrowForm falls through to the exact
+///   same live useReadContract(canExecute) / writeContract(borrow) path
+///   LIVE MODE always used -- no separate demo state, no forced ALLOW,
+///   no simulated transaction. See BorrowForm.tsx's `isFrozenPreview`.
+///
+/// Never read from or written to any contract. Chosen so
 /// positionValue * collateralFactor * riskAdjustment ≈ effectiveCapacity,
 /// matching the same formula PolicyEquation already renders live.
-export const DEMO_BORROW_LIMIT = {
+export const DEMO_BORROW_LIMIT_PREVIEW = {
+  amount: "1001",
   positionValue: 1_092n * ONE,
   collateralFactorBps: 8_000n, // 80%
   riskAdjustmentBps: 7_000n, // 70%
@@ -57,12 +69,6 @@ export const DEMO_BORROW_LIMIT = {
     reason: "Requested amount exceeds effective capacity",
   },
 };
-
-/// `borrow-allow` intentionally carries no forced decision or amount --
-/// it only presets the input to "5" (see BorrowForm) and then runs the
-/// exact same live canExecute -> borrow() path as LIVE MODE, because
-/// requirement #3 is that this leg stays real, not simulated.
-export const DEMO_BORROW_ALLOW_PRESET_AMOUNT = "5";
 
 /// Illustrative preview for `transfer-block` -- shows the existing
 /// debt-blocks-transfer reason using the real component/copy, without
