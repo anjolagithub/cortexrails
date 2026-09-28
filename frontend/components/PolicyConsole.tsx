@@ -14,6 +14,7 @@ import { BorrowForm } from "./BorrowForm";
 import { WithdrawForm } from "./WithdrawForm";
 import { TransferForm } from "./TransferForm";
 import { LiquidateForm } from "./LiquidateForm";
+import { RepayForm } from "./RepayForm";
 import { DemoModeBanner } from "./DemoModeBanner";
 
 export function PolicyConsole() {
@@ -47,6 +48,7 @@ export function PolicyConsole() {
         <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Policy decision · Withdraw</span><span className="font-mono text-[10px] text-terminal-muted">withdraw()</span></div><WithdrawForm positionRawBalance={position?.rawBalance} symbol={symbol} lifecycle={lifecycle} isReadOnly={isReadOnly} isDemoPreview={demoScenario === "withdraw"} /></div>
         <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Policy decision · Transfer</span><span className="font-mono text-[10px] text-terminal-muted">transfer()</span></div><TransferForm positionRawBalance={position?.rawBalance} symbol={symbol} lifecycle={lifecycle} isDemoBlockPreview={demoScenario === "transfer-block"} /></div>
       </div>
+      <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Debt · Repay</span><span className="font-mono text-[10px] text-terminal-muted">repay()</span></div><RepayForm /></div>
       <div className="decision-panel border border-terminal-border bg-terminal-bg p-5" aria-live="polite"><div className="mb-7 flex items-center justify-between"><span className="eyebrow">Policy decision · Liquidate</span><span className="font-mono text-[10px] text-terminal-muted">liquidate()</span></div><LiquidateForm demoPresetBorrower={demoScenario === "liquidation" ? process.env.NEXT_PUBLIC_DEMO_LIQUIDATABLE_BORROWER : undefined} /></div>
     </div>
     <div className="mt-7 border-t border-terminal-border pt-5">
