@@ -364,11 +364,36 @@ Natural next additions, given the current, disclosed scope boundaries.
 `docs/DEPLOYMENTS.md`, and are live today, so they've moved off this
 list.)
 
-- **Oracle-to-Registry sync.** `sdk/scripts/oracle-sync.ts` reads a
-  mock price feed, not a real oracle, and by default only prints the
-  lifecycle transition it would make. It sends a transaction only when
-  you pass `--execute` with the Registry owner key and confirm
-  interactively, and nothing runs it against the live Registry today.
+1. **Oracle-to-Registry sync.** `sdk/scripts/oracle-sync.ts` reads a
+   mock price feed, not a real oracle, and by default only prints the
+   lifecycle transition it would make. It sends a transaction only when
+   you pass `--execute` with the Registry owner key and confirm
+   interactively, and nothing runs it against the live Registry today.
+   Next step is wiring this to a real feed the moment one exists for
+   Robinhood Chain testnet (see the oracle bullet in
+   [Security / limitations](#security--limitations)) and running it on
+   a schedule instead of by hand.
+2. **A consumer CortexRails didn't write itself.** All four current
+   adapters (Lending, Vault, Transfer, Liquidation) are this repo's
+   own. The real test of "reusable policy layer" is a second,
+   independent protocol calling `canExecute()` against the same
+   Registry/Policy without forking this code -- the SDK's
+   agent-intent layer is built for exactly that entry point.
+3. **More than one asset.** `assetId = 1` (TSLA) is the only
+   configured asset today. Generalizing beyond it -- another
+   tokenized equity, a different asset class entirely -- is what
+   would actually demonstrate the Registry/Policy split isn't
+   TSLA-specific, rather than just claiming it isn't.
+4. **Audit and upgradeability path.** Explicitly out of scope for a
+   buildathon submission (see [Not claimed](#live-deployment) above),
+   but the real next milestone before any production claim: a
+   third-party security review, and a considered answer to
+   upgradeability that doesn't just add an admin key by default.
+
+None of the above is built yet -- this section is deliberately kept
+to what's next, not what's done; see [Live deployment](#live-deployment)
+and [Security / limitations](#security--limitations) for what's
+actually shipped and running today.
 
 ## Naming
 
