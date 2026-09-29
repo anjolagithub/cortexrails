@@ -24,7 +24,7 @@ function mergeRows(existing: ActivityRow[], incoming: ActivityRow[]): ActivityRo
 /// Shared onchain-activity read: historical backfill (getLogs from each
 /// contract's deploy block) plus live-tailing (useWatchContractEvent),
 /// across LendingAdapter/VaultAdapter/TransferAdapter/Registry -- the same
-/// six events ActivityLog.tsx has always read. Extracted out of that
+/// events ActivityLog.tsx has always read, plus Repaid. Extracted out of that
 /// component so PolicyConsole's "Recent activity" summary and the full
 /// /app/activity page read the SAME data through the SAME logic, rather
 /// than a second, separately-maintained (and previously nonexistent)
@@ -46,7 +46,7 @@ export function useActivityRows() {
         const [lendingLogs, vaultLogs, transferLogs, liquidationLogs, registryLogs] = await Promise.all([
           publicClient.getLogs({
             address: LENDING_ADAPTER.address,
-            events: pickEvents(LENDING_ADAPTER.abi, ["Deposited", "Borrowed"]),
+            events: pickEvents(LENDING_ADAPTER.abi, ["Deposited", "Borrowed", "Repaid"]),
             fromBlock: LENDING_ADAPTER_DEPLOY_BLOCK,
             toBlock: "latest",
           }),
@@ -146,6 +146,12 @@ export function useActivityRows() {
     address: LENDING_ADAPTER.address,
     abi: LENDING_ADAPTER.abi,
     eventName: "Borrowed",
+    onLogs: appendLiveLogs,
+  });
+  useWatchContractEvent({
+    address: LENDING_ADAPTER.address,
+    abi: LENDING_ADAPTER.abi,
+    eventName: "Repaid",
     onLogs: appendLiveLogs,
   });
   useWatchContractEvent({

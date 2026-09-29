@@ -44,7 +44,7 @@ export function pickEvents(abi: Abi, names: string[]): AbiEvent[] {
   );
 }
 
-export type ActivityKind = "deposit" | "borrow" | "withdraw" | "transfer" | "liquidate" | "lifecycle" | "parameters";
+export type ActivityKind = "deposit" | "borrow" | "repay" | "withdraw" | "transfer" | "liquidate" | "lifecycle" | "parameters";
 
 // Raw decoded fields only -- no display strings are baked in here, so
 // formatting (which depends on the live-read stock symbol) always
@@ -97,6 +97,8 @@ export function toActivityRow(log: DecodedLog, timestamp: bigint | undefined): A
       return { ...base, kind: "deposit", user: args.user as Address, amount: args.amount as bigint };
     case "Borrowed":
       return { ...base, kind: "borrow", user: args.user as Address, amount: args.amount as bigint };
+    case "Repaid":
+      return { ...base, kind: "repay", user: args.user as Address, amount: args.amount as bigint };
     case "Withdrawn":
       return { ...base, kind: "withdraw", user: args.user as Address, amount: args.amount as bigint };
     case "Transferred":
@@ -147,6 +149,7 @@ export function sortRowsDesc(rows: ActivityRow[]): ActivityRow[] {
 const KIND_LABELS: Record<ActivityKind, string> = {
   deposit: "Deposit",
   borrow: "Borrow",
+  repay: "Repay",
   withdraw: "Withdraw",
   transfer: "Transfer",
   liquidate: "Liquidate",
@@ -191,6 +194,12 @@ export function describeRow(row: ActivityRow, stockSymbol: string): { label: str
       // safeTransfer, which isn't what's emitted here. Formatted as a
       // dollar figure to match how the rest of the app (capacity,
       // position value) displays this same unit.
+      return { label, amountText: `$${formatUnits18(row.amount)}` };
+    case "repay":
+      // Same 18-decimal internal dollar-notional convention as borrow's
+      // amount above -- repay() takes that same unit as its argument
+      // (see LedgerLineLendingAdapter.sol:258), so it's formatted the
+      // same way here.
       return { label, amountText: `$${formatUnits18(row.amount)}` };
     case "lifecycle":
       return {

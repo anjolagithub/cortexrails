@@ -45,7 +45,7 @@ export function ActivityLog() {
           <p className="eyebrow">Onchain activity</p>
           <h2 id="activity-title" className="mt-2 text-2xl font-semibold tracking-tight">Activity</h2>
           <p className="mt-2 max-w-xl text-sm text-terminal-muted">
-            Deposited, Borrowed, Withdrawn, Transferred, and Registry state changes, read directly from onchain logs.
+            Deposited, Borrowed, Repaid, Withdrawn, Transferred, and Registry state changes, read directly from onchain logs.
           </p>
         </div>
       </div>
