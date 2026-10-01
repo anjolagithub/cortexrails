@@ -44,6 +44,27 @@ usually mix together:
 The decision lives in one reusable place. Consuming contracts (and the
 agents that propose actions to them) enforce it and hold the funds.
 
+## Who this is for
+
+- **A team building a lending, vault, or transfer product on tokenized
+  real-world assets** who doesn't want to write and audit their own
+  risk/lifecycle logic from scratch, or wants it shared across more
+  than one product instead of copy-pasted per contract -- this repo's
+  own four adapters (see [Multiple consumers](#multiple-consumers)
+  below) are the proof that split works, not just a claim that it
+  does.
+- **An autonomous agent, or an agent framework, that needs to move
+  funds** and wants a deterministic onchain boundary it checks before
+  acting, instead of trusting its own judgment about what's safe (see
+  [Autonomous agents](#autonomous-agents)).
+- **Anyone extending the same Registry/Policy to a new action,** the
+  way this repo added WITHDRAW, TRANSFER, and LIQUIDATE on top of
+  BORROW without touching the state store or the Stylus engines.
+
+No external protocol integrates CortexRails yet -- that's the real,
+disclosed gap (see [Roadmap](#roadmap)), not something this section
+is claiming otherwise.
+
 ## How it works
 
 ```
