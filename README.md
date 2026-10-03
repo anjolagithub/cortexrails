@@ -63,7 +63,9 @@ agents that propose actions to them) enforce it and hold the funds.
 
 No external protocol integrates CortexRails yet -- that's the real,
 disclosed gap (see [Roadmap](#roadmap)), not something this section
-is claiming otherwise.
+is claiming otherwise. Who we expect to pay, the planned pricing model,
+first target customers, and how market-closed safety works today
+versus next are in [`docs/BUSINESS.md`](docs/BUSINESS.md).
 
 ## How it works
 
